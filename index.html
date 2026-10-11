@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080d18">
+<title>VYTRON OS | Gestão Financeira</title>
+
+<style>
+:root {
+  --bg: #080d18;
+  --card: #111a2b;
+  --text: #f5f7ff;
+  --muted: #9ba8be;
+  --accent: #36d6b0;
+  --border: #25334a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+header {
+  padding: 24px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.logo span { color: var(--accent); }
+header p { color: var(--muted); margin-bottom: 0; }
+main { padding: 18px; max-width: 850px; margin: auto; }
+h2 { font-size: 21px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.balance {
+  font-size: 32px;
+  font-weight: bold;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.stat {
+  background: #0b1322;
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 0;
+}
+.stat small { color: var(--muted); }
+.stat strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+label {
+  display: block;
+  color: var(--muted);
+  margin: 12px 0 6px;
+}
+input, select, button {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+input, select {
+  background: #080d18;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+button {
+  border: 0;
+  background: var(--accent);
+  color: #07130f;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 14px;
+}
+.secondary {
+  background: #202d43;
+  color: white;
+}
+.item {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  overflow-wrap: anywhere;
+}
+.item:last-child { border-bottom: 0; }
+.item small { color: var(--muted); }
+.positive { color: var(--accent); }
+.negative { color: #ff8585; }
+footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 380px) {
+  .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="logo">VYTRON <span>OS</span></div>
+  <p>Assuma o controle do seu dinheiro.</p>
+</header>
+
+<main>
+  <section class="card">
+    <small>Saldo disponível</small>
+    <div class="balance" id="saldo">R$ 0,00</div>
+    <p style="color:var(--muted)">Seu painel de gestão financeira</p>
+  </section>
+
+  <section class="grid">
+    <div class="stat">
+      <small>Entradas</small>
+      <strong class="positive" id="entradas">R$ 0,00</strong>
+    </div>
+    <div class="stat">
+      <small>Despesas</small>
+      <strong class="negative" id="despesas">R$ 0,00</strong>
+    </div>
+    <div class="stat">
+      <small>Contas pendentes</small>
+      <strong id="pendentes">R$ 0,00</strong>
+    </div>
+    <div class="stat">
+      <small>Lançamentos</small>
+      <strong id="quantidade">0</strong>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Novo lançamento</h2>
+
+    <form id="formulario">
+      <label for="descricao">Descrição</label>
+      <input id="descricao" placeholder="Ex.: salário, aluguel..." required>
+
+      <label for="valor">Valor em reais</label>
+      <input id="valor" type="number" min="0.01" step="0.01"
+        placeholder="0,00" required>
+
+      <label for="tipo">Tipo</label>
+      <select id="tipo">
+        <option value="entrada">Entrada de dinheiro</option>
+        <option value="despesa">Despesa paga</option>
+        <option value="pendente">Conta pendente</option>
+      </select>
+
+      <label for="data">Data</label>
+      <input id="data" type="date" required>
+
+      <button type="submit">Adicionar lançamento</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Meus lançamentos</h2>
+    <div id="lista">
+      <p style="color:var(--muted)">Nenhum lançamento ainda.</p>
+    </div>
+    <button class="secondary" id="exportar">Exportar meus dados</button>
+  </section>
+
+  <section class="card">
+    <h2>Metas financeiras</h2>
+    <form id="formMeta">
+      <label for="metaNome">Nome da meta</label>
+      <input id="metaNome" placeholder="Ex.: minha reserva" required>
+      <label for="metaValor">Valor que deseja alcançar (R$)</label>
+      <input id="metaValor" type="number" min="0.01" step="0.01" required>
+      <button type="submit">Criar meta</button>
+    </form>
+    <div id="metas"></div>
+  </section>
+
+  <footer>
+    VYTRON OS © 2026<br>
+    Organize hoje. Construa seu futuro.
+  </footer>
+</main>
+
+<script>
+const moeda = valor => valor.toLocaleString("pt-BR", {
+  style: "currency",
+  currency: "BRL"
+});
+
+let lancamentos = [];
+let metas = [];
+
+try {
+  lancamentos = JSON.parse(
+    localStorage.getItem("vytron_lancamentos") || "[]"
+  );
+  metas = JSON.parse(localStorage.getItem("vytron_metas") || "[]");
+} catch (e) {
+  lancamentos = [];
+  metas = [];
+}
+
+const $ = id => document.getElementById(id);
+
+$("data").value = new Date().toLocaleDateString("en-CA");
+
+function salvar() {
+  localStorage.setItem("vytron_lancamentos", JSON.stringify(lancamentos));
+  localStorage.setItem("vytron_metas", JSON.stringify(metas));
+  atualizar();
+}
+
+function atualizar() {
+  const entradas = lancamentos
+    .filter(x => x.tipo === "entrada")
+    .reduce((s, x) => s + x.valor, 0);
+
+  const despesas = lancamentos
+    .filter(x => x.tipo === "despesa")
+    .reduce((s, x) => s + x.valor, 0);
+
+  const pendentes = lancamentos
+    .filter(x => x.tipo === "pendente")
+    .reduce((s, x) => s + x.valor, 0);
+
+  $("saldo").textContent = moeda(entradas - despesas);
+  $("entradas").textContent = moeda(entradas);
+  $("despesas").textContent = moeda(despesas);
+  $("pendentes").textContent = moeda(pendentes);
+  $("quantidade").textContent = lancamentos.length;
+
+  $("lista").replaceChildren();
+
+  if (!lancamentos.length) {
+    const p = document.createElement("p");
+    p.textContent = "Nenhum lançamento ainda.";
+    p.style.color = "var(--muted)";
+    $("lista").appendChild(p);
+  }
+
+  lancamentos.slice().reverse().forEach(x => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    const titulo = document.createElement("strong");
+    titulo.textContent = x.descricao;
+
+    const detalhe = document.createElement("small");
+    detalhe.textContent = " • " + x.data + " • " + ({
+      entrada: "Entrada",
+      despesa: "Despesa paga",
+      pendente: "Conta pendente"
+    }[x.tipo]);
+
+    const valor = document.createElement("div");
+    valor.className = x.tipo === "entrada" ? "positive" : "negative";
+    valor.textContent = moeda(x.valor);
+
+    const excluir = document.createElement("button");
+    excluir.className = "secondary";
+    excluir.textContent = "Excluir lançamento";
+    excluir.onclick = () => {
+      lancamentos = lancamentos.filter(y => y.id !== x.id);
+      salvar();
+    };
+
+    div.append(titulo, detalhe, valor, excluir);
+    $("lista").appendChild(div);
+  });
+
+  $("metas").replaceChildren();
+
+  metas.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    const titulo = document.createElement("strong");
+    titulo.textContent = m.nome;
+
+    const detalhe = document.createElement("p");
+    detalhe.textContent = "Objetivo: " + moeda(m.valor);
+
+    div.append(titulo, detalhe);
+    $("metas").appendChild(div);
+  });
+}
+
+$("formulario").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const descricao = $("descricao").value.trim();
+  const valor = Number($("valor").value);
+  const tipo = $("tipo").value;
+  const data = $("data").value;
+
+  if (!descricao || !Number.isFinite(valor) || valor <= 0 || !data) {
+    alert("Confira a descrição, o valor e a data.");
+    return;
+  }
+
+  lancamentos.push({
+    id: Date.now() + Math.random(),
+    descricao,
+    valor,
+    tipo,
+    data
+  });
+
+  salvar();
+  e.target.reset();
+  $("data").value = new Date().toLocaleDateString("en-CA");
+});
+
+$("formMeta").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const nome = $("metaNome").value.trim();
+  const valor = Number($("metaValor").value);
+
+  if (!nome || !Number.isFinite(valor) || valor <= 0) {
+    alert("Informe o nome e um valor válido para sua meta.");
+    return;
+  }
+
+  metas.push({ nome, valor });
+  salvar();
+  e.target.reset();
+});
+
+$("exportar").addEventListener("click", () => {
+  const dados = {
+    produto: "VYTRON OS",
+    exportadoEm: new Date().toISOString(),
+    lancamentos,
+    metas
+  };
+
+  const arquivo = new Blob(
+    [JSON.stringify(dados, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(arquivo);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "vytron-os-backup.json";
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+atualizar();
+</script>
+</body>
+</html>
